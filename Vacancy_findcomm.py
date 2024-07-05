@@ -1,7 +1,7 @@
 import logging
 from Parser import *
 from aiogram.filters import Command, StateFilter
-from aiogram import Bot, Dispatcher, Router, types, F
+from aiogram import Bot, Router, types, F
 from aiogram.fsm.state import StatesGroup, State
 #from aiogram.filters.command import Command
 from aiogram.types import Message, ReplyKeyboardRemove
@@ -18,12 +18,13 @@ TOKEN = "7251236153:AAH1zGT_oTpH8X7n31pYqzhzXbpeFAWe1nc"
 
 bot = Bot(TOKEN)
 
-#dp = Dispatcher()
 router = Router()
 
 experience_id = ["noExperience", "between1And3", "between3And6", "moreThan6"]
 employment_id = ["full", "part", "project", "volunteer", "probation"]
 schedule_id = ["fullDay", "shift", "flexible", "remote", "flyInFlyOut"]
+
+
 
 class Form(StatesGroup):
     wrote_text = State()
@@ -81,11 +82,30 @@ async def employment_chosen_incorrectly(message: Message):
 
 @router.message(Form.choosing_schedule, F.text.in_(schedule_id))
 async def schedule_chosen(message: Message, state: FSMContext):
+
     user_data = await state.get_data()
-    await message.answer(
-        text = f"schedule - {message.text}, {user_data['vacancy_name']}, {user_data['vacancy_experience']}, {user_data['vacancy_employment']} ",
+    get_vac(user_data['vacancy_name'], user_data['vacancy_experience'], user_data['vacancy_employment'], message.text)
+    textm = ""
+    cursor.execute("SELECT * FROM vacancies")
+
+    for vac in cursor.fetchmany(15):
+        vacnam = vac[1]
+        vacmin = vac[2]
+        vacmax = vac[3]
+        vacurl = vac[4]
+
+        textm += f"\n Название вакансии: {vacnam} || Мин зарплата: {vacmin} || Макс зарплата: {vacmax} || ссылка на вакансию: {vacurl}"
+    
+    if len(textm) == 0:
+        await message.answer(
+        text = "По вашему запросу ничего не найдено, попробуйте сделать другой запрос /Find",
         reply_markup=ReplyKeyboardRemove()
-    )
+        )
+    else:
+        await message.answer(
+        text = textm,
+        reply_markup=ReplyKeyboardRemove()
+        )
     await state.clear()
 
 @router.message(StateFilter("Form:choosing_schedule"))
@@ -95,8 +115,3 @@ async def shedule_chosen_incorrectly(message: Message):
              "Пожалуйста, выберите один id из списка ниже:",
         reply_markup=make_row_keyboard(schedule_id)
     )
-'''
-@dp.message(Command("start"))
-async def cmd_start(message: types.Message):
-    await message.answer(f"Привет!")
-'''

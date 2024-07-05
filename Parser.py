@@ -1,13 +1,10 @@
 import requests
 import psycopg2
-from sqlalchemy import engine as sql
-
-jobname = "Программист C++"
 
 conn = psycopg2.connect(dbname = "postgres", user = "postgres", password = "23491", host = "127.0.0.1")
 cursor = conn.cursor()
 
-def get_vac(num = 0, name = "", exp_id = "noExperience", emp_id = "full", sch_id = "fullDay"):
+def get_vac( name = "", exp_id = "noExperience", emp_id = "full", sch_id = "fullDay", num = 0):
     param = {
         'text': name,
         'experience': exp_id,
@@ -22,6 +19,7 @@ def get_vac(num = 0, name = "", exp_id = "noExperience", emp_id = "full", sch_id
     req = requests.get('https://api.hh.ru/vacancies', param)
 
     if req.status_code == 200:
+        cursor.execute("DELETE FROM vacancies")
         data = req.json()
         req.close()
 
@@ -47,7 +45,7 @@ def get_vac(num = 0, name = "", exp_id = "noExperience", emp_id = "full", sch_id
                     vacancy_startpay = None
                     vacancy_maxpay = None
                 
-                """
+                
                 insert_cd = "INSERT INTO vacancies(id, name, start_sal, max_sal, vac_url, exp_type, emp_type, responses, sched_type) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)"
                 insert_value = (vacancy_id, vacancy_title, vacancy_startpay, vacancy_maxpay, vacancy_url, vacancy_experience, vacancy_employment, vacancy_resp_count, vacancy_sched)
                 try:
@@ -55,21 +53,3 @@ def get_vac(num = 0, name = "", exp_id = "noExperience", emp_id = "full", sch_id
                 except:
                     continue
                 conn.commit()
-                """
-
-def mean_sal_vac():
-    cursor.execute("SELECT AVG(start_sal)::numeric(10,0) FROM vacancies")
-    for a in cursor:
-        average = a[0]
-    return average
-
-
-#cursor.execute("DELETE FROM vacancies")
-#cursor.close()
-#conn.close()
-#conn.commit() # сохр изменений
-
-
-
-#mean_sal_vac()
-#get_vac(0, jobname)

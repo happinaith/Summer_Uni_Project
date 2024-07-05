@@ -19,6 +19,10 @@ async def main():
 
     dp.include_router(router)
 
+    @dp.message(Command("start"))
+    async def cmd_start(message: types.Message):
+        await message.answer(f"Привет! Воспользуйся коммандой /Find для парсинга вакансии")
+
     await dp.start_polling(bot)
 
 
